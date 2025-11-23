@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: reviewer
+      POSTGRES_PASSWORD: reviewer
+      POSTGRES_DB: reviewer
+    ports:
+      - "55432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reviewer"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      HTTP_PORT: 8080
+      STORAGE_TYPE: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: reviewer
+      DB_PASSWORD: reviewer
+      DB_NAME: reviewer
+      DB_SSL_MODE: disable
+    ports:
+      - "8080:8080"
+
+volumes:
+  db_data:
+
